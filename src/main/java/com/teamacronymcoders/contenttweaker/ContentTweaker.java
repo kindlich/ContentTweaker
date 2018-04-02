@@ -4,13 +4,20 @@ import com.teamacronymcoders.base.BaseModFoundation;
 import com.teamacronymcoders.base.subblocksystem.SubBlockSystem;
 import com.teamacronymcoders.base.util.OreDictUtils;
 import com.teamacronymcoders.contenttweaker.api.ContentTweakerAPI;
+import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.CoTAdvancementBuilder;
 import crafttweaker.CraftTweakerAPI;
+import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementManager;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+
+import java.util.Map;
 
 import static com.teamacronymcoders.contenttweaker.ContentTweaker.*;
 
@@ -70,5 +77,17 @@ public class ContentTweaker extends BaseModFoundation<ContentTweaker> {
     @Override
     public ContentTweaker getInstance() {
         return this;
+    }
+
+    @EventHandler
+    public void serverAboutToStart(FMLServerStartingEvent event) {
+        AdvancementManager.ADVANCEMENT_LIST.advancements.putAll(CoTAdvancementBuilder.map);
+        for(Map.Entry<ResourceLocation, Advancement> entry : CoTAdvancementBuilder.map.entrySet()) {
+            if(entry.getValue().getParent() == null)
+                AdvancementManager.ADVANCEMENT_LIST.roots.add(entry.getValue());
+            else
+                AdvancementManager.ADVANCEMENT_LIST.nonRoots.add(entry.getValue());
+        }
+        CraftTweakerAPI.logError("TESTS");
     }
 }
