@@ -12,6 +12,7 @@ import slimeknights.tconstruct.library.TinkerRegistry;
 import slimeknights.tconstruct.library.materials.Material;
 import stanhebben.zenscript.annotations.Optional;
 import stanhebben.zenscript.annotations.ZenClass;
+import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenMethod;
 
 
@@ -19,7 +20,7 @@ import stanhebben.zenscript.annotations.ZenMethod;
  * Material Representation, returned from the materialBuilder's register method and the Bracket handler
  */
 
-@ZenClass("mods.contenttweaker.tconstruct.material")
+@ZenClass("mods.contenttweaker.tconstruct.Material")
 @ZenRegister
 @ModOnly("tconstruct")
 public class TConMaterialRepresentation {
@@ -61,8 +62,13 @@ public class TConMaterialRepresentation {
         return material;
     }
 
-    @ZenMethod
+    @ZenGetter("commandString")
     public String toCommandString() {
         return "<ticonmaterial:" + material.getIdentifier() + ">";
+    }
+
+    @ZenGetter("identifier")
+    public String getIdentifier() {
+        return material.identifier;
     }
 }
