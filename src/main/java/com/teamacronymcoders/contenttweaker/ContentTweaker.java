@@ -5,7 +5,9 @@ import com.teamacronymcoders.base.subblocksystem.SubBlockSystem;
 import com.teamacronymcoders.base.util.OreDictUtils;
 import com.teamacronymcoders.contenttweaker.api.ContentTweakerAPI;
 import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.CoTAdvancementBuilder;
+import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.functions.CustomTrigger;
 import crafttweaker.CraftTweakerAPI;
+import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
@@ -51,6 +53,7 @@ public class ContentTweaker extends BaseModFoundation<ContentTweaker> {
     @Override
     public void init(FMLInitializationEvent event) {
         super.init(event);
+        CustomTrigger.TRIGGERS.values().forEach(CriteriaTriggers::register);
     }
 
     @EventHandler

@@ -150,6 +150,13 @@ public class CoTAdvancementBuilder {
         addCriterionInstance(identifier, new CriterionTriggers.EntityKilledPlayerTrigger(tester));
     }
 
+    /*
+    @ZenMethod
+    public void addCustomTrigger(String identifier) {
+        addCriterionInstance(identifier, CustomTrigger.TRIGGERS.get("contenttweaker:kindlich_custom").getInstance());
+    }
+    */
+
 
     @ZenMethod
     public void setAsTask() {
