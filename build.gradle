@@ -18,6 +18,14 @@ version = "${minecraft_version}-" + getVersion()
 group = "com.teamacronymcoders"
 archivesBaseName = "${mod_name}"
 
+
+jar {
+    manifest {
+        attributes 'FMLAT': 'contenttweaker_at.cfg'
+    }
+}
+
+
 minecraft {
     version = "${minecraft_version}-${forge_version}"
 

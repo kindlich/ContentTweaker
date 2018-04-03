@@ -1,21 +1,27 @@
 package com.teamacronymcoders.contenttweaker.modules.vanilla.advancements;
 
+import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.functions.CriterionTesters;
 import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.functions.CriterionTriggers;
+import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.functions.CriterionTriggers.ItemConsumeTrigger;
 import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.functions.RewardFunctions;
+import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.util.CustomAdvancementMap;
+import crafttweaker.CraftTweakerAPI;
 import crafttweaker.annotations.ZenRegister;
+import crafttweaker.api.entity.IEntityDefinition;
 import crafttweaker.api.formatting.IFormattedText;
 import crafttweaker.api.item.IIngredient;
 import crafttweaker.api.item.IItemStack;
 import net.minecraft.advancements.*;
-import net.minecraft.advancements.critereon.ConsumeItemTrigger;
-import net.minecraft.advancements.critereon.ItemPredicate;
-import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 import stanhebben.zenscript.annotations.ZenProperty;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -86,20 +92,65 @@ public class CoTAdvancementBuilder {
     }
 
 
-
     @ZenMethod
     public static CoTAdvancementBuilder create(String identifier) {
         return new CoTAdvancementBuilder(identifier);
     }
 
-    private void addItemTriggerCriterion(String identifier, ICriterionInstance trigger) {
+    private void addCriterionInstance(String identifier, ICriterionInstance trigger) {
         criteria.put(identifier, new Criterion(trigger));
     }
 
     @ZenMethod
     public void addItemConsumeCriterion(String identifier, IIngredient ingredient) {
-        addItemTriggerCriterion(identifier, new CriterionTriggers.ItemConsumeTrigger(ingredient));
+        addItemConsumeCriterion(identifier, ingredient::matches);
     }
+
+    @ZenMethod
+    public void addItemConsumeCriterion(String identifier, CriterionTesters.ItemConsumeTester tester) {
+        addCriterionInstance(identifier, new ItemConsumeTrigger(tester));
+    }
+
+    @ZenMethod
+    public void addEntityBredTrigger(String identifier, IEntityDefinition child) {
+        addEntityBredTrigger(identifier, (player, parent1, parent2, child1) -> child1.getDefinition().getId().equals(child.getId()));
+    }
+
+    @ZenMethod
+    public void addEntityBredTrigger(String identifier, CriterionTesters.EntityBredTester tester) {
+        addCriterionInstance(identifier, new CriterionTriggers.EntityBredTrigger(tester));
+    }
+
+    @ZenMethod
+    public void addBeaconTrigger(String identifier, int minLevel, int maxLevel) {
+        addBeaconTrigger(identifier, level -> minLevel <= level && level <= maxLevel);
+    }
+
+    @ZenMethod
+    public void addBeaconTrigger(String identifier, CriterionTesters.BeaconTester tester) {
+        addCriterionInstance(identifier, new CriterionTriggers.BeaconTrigger(tester));
+    }
+
+    @ZenMethod
+    public void addPlayerKilledEntityTrigger(String identifier, IEntityDefinition definition) {
+        addPlayerKilledEntityTrigger(identifier, (player, entity, killingBlow) -> entity.getDefinition().getId().equals(definition.getId()));
+    }
+
+    @ZenMethod
+    public void addPlayerKilledEntityTrigger(String identifier, CriterionTesters.PlayerKillTester tester) {
+        addCriterionInstance(identifier, new CriterionTriggers.PlayerKilledEntityTrigger(tester));
+    }
+
+    @ZenMethod
+    public void addEntityKilledPlayerTrigger(String identifier, IEntityDefinition definition) {
+        addEntityKilledPlayerTrigger(identifier, (player, entity, killingBlow) -> entity.getDefinition().getId().equals(definition.getId()));
+    }
+
+    @ZenMethod
+    public void addEntityKilledPlayerTrigger(String identifier, CriterionTesters.PlayerKillTester tester) {
+        addCriterionInstance(identifier, new CriterionTriggers.EntityKilledPlayerTrigger(tester));
+    }
+
 
     @ZenMethod
     public void setAsTask() {
@@ -130,26 +181,56 @@ public class CoTAdvancementBuilder {
         }
         rewards.onCompleted = this.onCompleted;
 
-
-        //TODO criteria
-        Criterion criterion = new Criterion(new ConsumeItemTrigger.Instance(new ItemPredicate(){
-            @Override
-            public boolean test(ItemStack item) {
-                return true;
-            }
-        }));
-
         CoTAdvancement advancement = new CoTAdvancement(id, parent, displayInfo, rewards, criteria, requirements, displayText);
 
 
-
         AdvancementManager.ADVANCEMENT_LIST.advancements.put(id, advancement);
-        if(parent == null)
+        if (parent == null) {
             AdvancementManager.ADVANCEMENT_LIST.roots.add(advancement);
-        else
+        } else {
             AdvancementManager.ADVANCEMENT_LIST.nonRoots.add(advancement);
-        map.put(id, advancement);
+        }
+        MAP.put(id, advancement);
     }
 
-    public static final Map<ResourceLocation, Advancement> map = new HashMap<>();
+
+    //########################################
+    //###  Minecraft advancement handling  ###
+    //########################################
+
+    private static final Map<ResourceLocation, Advancement> MAP = new HashMap<>();
+
+    public static void addAdvancements() {
+        AdvancementManager.ADVANCEMENT_LIST.advancements.putAll(MAP);
+        for (Advancement advancement : MAP.values()) {
+            if (advancement.getParent() == null) {
+                AdvancementManager.ADVANCEMENT_LIST.roots.add(advancement);
+            } else {
+                AdvancementManager.ADVANCEMENT_LIST.nonRoots.add(advancement);
+            }
+        }
+
+    }
+
+    public static void handleAdvancements() {
+        if (!MAP.isEmpty()) {
+            hackAdvancementList();
+            addAdvancements();
+        }
+    }
+
+    private static void hackAdvancementList() {
+        try {
+            Field advancements = ReflectionHelper.findField(AdvancementList.class, "advancements", "field_192784_c", "field_192092_b");
+            Field modifier = Field.class.getDeclaredField("modifiers");
+            modifier.setAccessible(true);
+            //No longer final!
+            modifier.setInt(advancements, advancements.getModifiers() & ~Modifier.FINAL);
+            CustomAdvancementMap map = new CustomAdvancementMap(AdvancementManager.ADVANCEMENT_LIST.advancements);
+            advancements.set(AdvancementManager.ADVANCEMENT_LIST, map);
+        } catch (NoSuchFieldException | IllegalAccessException | ReflectionHelper.UnableToFindFieldException e) {
+            CraftTweakerAPI.logWarning(Arrays.deepToString(AdvancementList.class.getFields()));
+            CraftTweakerAPI.logError("Error applying custom advancements", e);
+        }
+    }
 }
