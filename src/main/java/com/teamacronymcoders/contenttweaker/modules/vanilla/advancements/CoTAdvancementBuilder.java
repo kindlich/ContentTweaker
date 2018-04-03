@@ -4,7 +4,7 @@ import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.functio
 import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.functions.CriterionTriggers;
 import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.functions.CriterionTriggers.ItemConsumeTrigger;
 import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.functions.RewardFunctions;
-import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.util.CustomAdvancementMap;
+import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.util.CustomAdvancementSet;
 import crafttweaker.CraftTweakerAPI;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.entity.IEntityDefinition;
@@ -21,7 +21,6 @@ import stanhebben.zenscript.annotations.ZenProperty;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -221,15 +220,14 @@ public class CoTAdvancementBuilder {
 
     private static void hackAdvancementList() {
         try {
-            Field advancements = ReflectionHelper.findField(AdvancementList.class, "advancements", "field_192784_c", "field_192092_b");
+            Field nonRoots = ReflectionHelper.findField(AdvancementList.class, "nonRoots", "field_192094_d");
             Field modifier = Field.class.getDeclaredField("modifiers");
             modifier.setAccessible(true);
             //No longer final!
-            modifier.setInt(advancements, advancements.getModifiers() & ~Modifier.FINAL);
-            CustomAdvancementMap map = new CustomAdvancementMap(AdvancementManager.ADVANCEMENT_LIST.advancements);
-            advancements.set(AdvancementManager.ADVANCEMENT_LIST, map);
+            modifier.setInt(nonRoots, nonRoots.getModifiers() & ~Modifier.FINAL);
+            CustomAdvancementSet set = new CustomAdvancementSet(AdvancementManager.ADVANCEMENT_LIST.nonRoots);
+            nonRoots.set(AdvancementManager.ADVANCEMENT_LIST, set);
         } catch (NoSuchFieldException | IllegalAccessException | ReflectionHelper.UnableToFindFieldException e) {
-            CraftTweakerAPI.logWarning(Arrays.deepToString(AdvancementList.class.getFields()));
             CraftTweakerAPI.logError("Error applying custom advancements", e);
         }
     }
