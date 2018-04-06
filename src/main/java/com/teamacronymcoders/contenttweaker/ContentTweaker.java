@@ -7,6 +7,9 @@ import com.teamacronymcoders.contenttweaker.api.ContentTweakerAPI;
 import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.CoTAdvancementBuilder;
 import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.functions.CustomTrigger;
 import crafttweaker.CraftTweakerAPI;
+import crafttweaker.mc1120.brackets.BracketHandlerEntity;
+import crafttweaker.mc1120.brackets.BracketHandlerItem;
+import crafttweaker.mc1120.brackets.BracketHandlerLiquid;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -46,6 +49,9 @@ public class ContentTweaker extends BaseModFoundation<ContentTweaker> {
 
     @Override
     public void afterModuleHandlerInit(FMLPreInitializationEvent event) {
+        BracketHandlerItem.rebuildItemRegistry();
+        BracketHandlerLiquid.rebuildLiquidRegistry();
+        BracketHandlerEntity.rebuildEntityRegistry();
         scriptsSuccessful = CraftTweakerAPI.tweaker.loadScript(false, "contenttweaker");
     }
 

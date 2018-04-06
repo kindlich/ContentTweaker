@@ -2,19 +2,25 @@ package com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.functi
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
+import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.triggers.CoTTrigger;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.player.IPlayer;
+import io.netty.util.internal.ConcurrentSet;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.advancements.ICriterionInstance;
 import net.minecraft.advancements.ICriterionTrigger;
 import net.minecraft.advancements.PlayerAdvancements;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ResourceLocation;
 
-import java.util.ArrayList;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class CustomTrigger implements ICriterionTrigger<CustomTrigger.Instance> {
 
     /**
@@ -24,20 +30,21 @@ public class CustomTrigger implements ICriterionTrigger<CustomTrigger.Instance> 
 
 
     private final ResourceLocation id;
-    private final List<Listener<Instance>> listeners = new ArrayList<>();
+    private final Set<Listener<Instance>> listeners = new ConcurrentSet<>();
     private final Instance instance = new Instance();
 
     static {
         //createTrigger("contenttweaker:kindlich_custom");
     }
 
-    public static void createTrigger(String id) {
-        createTrigger(new ResourceLocation(id));
+    public static CustomTrigger createTrigger(String id) {
+        return createTrigger(new ResourceLocation(id));
     }
 
-    public static void createTrigger(ResourceLocation id) {
+    public static CustomTrigger createTrigger(ResourceLocation id) {
         CustomTrigger trigger = new CustomTrigger(id);
         TRIGGERS.put(id.toString(), trigger);
+        return trigger;
     }
 
     public CustomTrigger(ResourceLocation id) {
@@ -74,10 +81,16 @@ public class CustomTrigger implements ICriterionTrigger<CustomTrigger.Instance> 
         return instance;
     }
 
+    public void setTestFunction(@Nullable CoTTrigger.TestGrantFunction function) {
+        this.instance.setFunction(function);
+    }
+
     public class Instance implements ICriterionInstance {
 
+        private CoTTrigger.TestGrantFunction function;
+
         public boolean test(IPlayer player) {
-            return true;
+            return function == null || function.handle(player);
         }
 
         @Override
@@ -85,12 +98,14 @@ public class CustomTrigger implements ICriterionTrigger<CustomTrigger.Instance> 
             return CustomTrigger.this.id;
         }
 
-        public void trigger(EntityPlayerMP player) {
-            for (Listener<Instance> listener : CustomTrigger.this.listeners) {
-                if (listener.getCriterionInstance().test(CraftTweakerMC.getIPlayer(player))) {
-                    listener.grantCriterion(player.getAdvancements());
-                }
+        public void trigger(@Nullable EntityPlayerMP player) {
+            if (player != null) {
+                CustomTrigger.this.listeners.stream().filter(listener -> listener.getCriterionInstance().test(CraftTweakerMC.getIPlayer(player))).forEach(listener -> listener.grantCriterion(player.getAdvancements()));
             }
+        }
+
+        public void setFunction(@Nullable CoTTrigger.TestGrantFunction function) {
+            this.function = function;
         }
     }
 }

@@ -1,15 +1,11 @@
 package com.teamacronymcoders.contenttweaker.modules.vanilla.advancements;
 
-import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.functions.CriterionTesters;
-import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.functions.CriterionTriggers;
-import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.functions.CriterionTriggers.ItemConsumeTrigger;
+import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.functions.CustomTrigger;
 import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.functions.RewardFunctions;
 import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.util.CustomAdvancementSet;
 import crafttweaker.CraftTweakerAPI;
 import crafttweaker.annotations.ZenRegister;
-import crafttweaker.api.entity.IEntityDefinition;
 import crafttweaker.api.formatting.IFormattedText;
-import crafttweaker.api.item.IIngredient;
 import crafttweaker.api.item.IItemStack;
 import net.minecraft.advancements.*;
 import net.minecraft.item.crafting.IRecipe;
@@ -96,67 +92,19 @@ public class CoTAdvancementBuilder {
         return new CoTAdvancementBuilder(identifier);
     }
 
+    @ZenMethod
+    public void removeTrigger(String identifier) {
+        criteria.remove(identifier);
+    }
+
     private void addCriterionInstance(String identifier, ICriterionInstance trigger) {
         criteria.put(identifier, new Criterion(trigger));
     }
 
     @ZenMethod
-    public void addItemConsumeCriterion(String identifier, IIngredient ingredient) {
-        addItemConsumeCriterion(identifier, ingredient::matches);
+    public void addCustomTrigger(String identifier, String triggerName) {
+        addCriterionInstance(identifier, CustomTrigger.TRIGGERS.get(triggerName).getInstance());
     }
-
-    @ZenMethod
-    public void addItemConsumeCriterion(String identifier, CriterionTesters.ItemConsumeTester tester) {
-        addCriterionInstance(identifier, new ItemConsumeTrigger(tester));
-    }
-
-    @ZenMethod
-    public void addEntityBredTrigger(String identifier, IEntityDefinition child) {
-        addEntityBredTrigger(identifier, (player, parent1, parent2, child1) -> child1.getDefinition().getId().equals(child.getId()));
-    }
-
-    @ZenMethod
-    public void addEntityBredTrigger(String identifier, CriterionTesters.EntityBredTester tester) {
-        addCriterionInstance(identifier, new CriterionTriggers.EntityBredTrigger(tester));
-    }
-
-    @ZenMethod
-    public void addBeaconTrigger(String identifier, int minLevel, int maxLevel) {
-        addBeaconTrigger(identifier, level -> minLevel <= level && level <= maxLevel);
-    }
-
-    @ZenMethod
-    public void addBeaconTrigger(String identifier, CriterionTesters.BeaconTester tester) {
-        addCriterionInstance(identifier, new CriterionTriggers.BeaconTrigger(tester));
-    }
-
-    @ZenMethod
-    public void addPlayerKilledEntityTrigger(String identifier, IEntityDefinition definition) {
-        addPlayerKilledEntityTrigger(identifier, (player, entity, killingBlow) -> entity.getDefinition().getId().equals(definition.getId()));
-    }
-
-    @ZenMethod
-    public void addPlayerKilledEntityTrigger(String identifier, CriterionTesters.PlayerKillTester tester) {
-        addCriterionInstance(identifier, new CriterionTriggers.PlayerKilledEntityTrigger(tester));
-    }
-
-    @ZenMethod
-    public void addEntityKilledPlayerTrigger(String identifier, IEntityDefinition definition) {
-        addEntityKilledPlayerTrigger(identifier, (player, entity, killingBlow) -> entity.getDefinition().getId().equals(definition.getId()));
-    }
-
-    @ZenMethod
-    public void addEntityKilledPlayerTrigger(String identifier, CriterionTesters.PlayerKillTester tester) {
-        addCriterionInstance(identifier, new CriterionTriggers.EntityKilledPlayerTrigger(tester));
-    }
-
-    /*
-    @ZenMethod
-    public void addCustomTrigger(String identifier) {
-        addCriterionInstance(identifier, CustomTrigger.TRIGGERS.get("contenttweaker:kindlich_custom").getInstance());
-    }
-    */
-
 
     @ZenMethod
     public void setAsTask() {
