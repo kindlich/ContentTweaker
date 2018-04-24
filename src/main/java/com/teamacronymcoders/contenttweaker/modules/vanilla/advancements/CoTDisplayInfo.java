@@ -16,10 +16,10 @@ public class CoTDisplayInfo extends DisplayInfo {
     private final IItemStack icon;
     private final ResourceLocation background;
     private final boolean showToast;
-    private final int posX;
-    private final int posY;
+    private final float posX;
+    private final float posY;
 
-    public CoTDisplayInfo(IItemStack icon, IFormattedText title, IFormattedText description, @Nullable ResourceLocation background, FrameType frame, boolean showToast, boolean announceToChat, boolean hidden, int posX, int posY) {
+    public CoTDisplayInfo(IItemStack icon, IFormattedText title, IFormattedText description, @Nullable ResourceLocation background, FrameType frame, boolean showToast, boolean announceToChat, boolean hidden, float posX, float posY) {
         super(ItemStack.EMPTY,
                 new TextComponentString(title == null ? "" : title.getText()),
                 new TextComponentString(description == null ? "" : description.getText()),
@@ -33,9 +33,19 @@ public class CoTDisplayInfo extends DisplayInfo {
         this.posX = posX;
         this.posY = posY;
 
-        setPosition(posX, posY);
+        super.setPosition(posX, posY);
 
         this.icon = icon;
+    }
+
+    @Override
+    public float getX() {
+        return posX;
+    }
+
+    @Override
+    public float getY() {
+        return posY;
     }
 
     @Override

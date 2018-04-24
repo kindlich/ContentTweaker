@@ -3,20 +3,16 @@ package com.teamacronymcoders.contenttweaker.modules.vanilla.advancements;
 import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.functions.CustomTrigger;
 import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.functions.RewardFunctions;
 import com.teamacronymcoders.contenttweaker.modules.vanilla.advancements.util.CustomAdvancementSet;
-import crafttweaker.CraftTweakerAPI;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.formatting.IFormattedText;
 import crafttweaker.api.item.IItemStack;
 import net.minecraft.advancements.*;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 import stanhebben.zenscript.annotations.ZenProperty;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,10 +48,10 @@ public class CoTAdvancementBuilder {
     public boolean hidden = false;
 
     @ZenProperty
-    public int posX = 0;
+    public float posX = 0.0F;
 
     @ZenProperty
-    public int posY = 0;
+    public float posY = 0.0F;
 
     @ZenProperty
     public String[][] requirements = new String[0][];
@@ -168,22 +164,8 @@ public class CoTAdvancementBuilder {
 
     public static void handleAdvancements() {
         if (!MAP.isEmpty()) {
-            hackAdvancementList();
+            AdvancementManager.ADVANCEMENT_LIST.nonRoots = new CustomAdvancementSet(AdvancementManager.ADVANCEMENT_LIST.nonRoots);
             addAdvancements();
-        }
-    }
-
-    private static void hackAdvancementList() {
-        try {
-            Field nonRoots = ReflectionHelper.findField(AdvancementList.class, "nonRoots", "field_192094_d");
-            Field modifier = Field.class.getDeclaredField("modifiers");
-            modifier.setAccessible(true);
-            //No longer final!
-            modifier.setInt(nonRoots, nonRoots.getModifiers() & ~Modifier.FINAL);
-            CustomAdvancementSet set = new CustomAdvancementSet(AdvancementManager.ADVANCEMENT_LIST.nonRoots);
-            nonRoots.set(AdvancementManager.ADVANCEMENT_LIST, set);
-        } catch (NoSuchFieldException | IllegalAccessException | ReflectionHelper.UnableToFindFieldException e) {
-            CraftTweakerAPI.logError("Error applying custom advancements", e);
         }
     }
 }

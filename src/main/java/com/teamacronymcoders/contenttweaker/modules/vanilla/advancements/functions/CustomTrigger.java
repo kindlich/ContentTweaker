@@ -47,7 +47,7 @@ public class CustomTrigger implements ICriterionTrigger<CustomTrigger.Instance> 
         return trigger;
     }
 
-    public CustomTrigger(ResourceLocation id) {
+    private CustomTrigger(ResourceLocation id) {
         this.id = id;
     }
 
@@ -81,15 +81,16 @@ public class CustomTrigger implements ICriterionTrigger<CustomTrigger.Instance> 
         return instance;
     }
 
-    public void setTestFunction(@Nullable CoTTrigger.TestGrantFunction function) {
+    public CustomTrigger setTestFunction(@Nullable CoTTrigger.TestGrantFunction function) {
         this.instance.setFunction(function);
+        return this;
     }
 
     public class Instance implements ICriterionInstance {
 
         private CoTTrigger.TestGrantFunction function;
 
-        public boolean test(IPlayer player) {
+        boolean test(IPlayer player) {
             return function == null || function.handle(player);
         }
 
@@ -100,11 +101,16 @@ public class CustomTrigger implements ICriterionTrigger<CustomTrigger.Instance> 
 
         public void trigger(@Nullable EntityPlayerMP player) {
             if (player != null) {
-                CustomTrigger.this.listeners.stream().filter(listener -> listener.getCriterionInstance().test(CraftTweakerMC.getIPlayer(player))).forEach(listener -> listener.grantCriterion(player.getAdvancements()));
+                IPlayer iPlayer = CraftTweakerMC.getIPlayer(player);
+                for (Listener<Instance> listener : CustomTrigger.this.listeners) {
+                    if (listener.getCriterionInstance().test(iPlayer)) {
+                        listener.grantCriterion(player.getAdvancements());
+                    }
+                }
             }
         }
 
-        public void setFunction(@Nullable CoTTrigger.TestGrantFunction function) {
+        void setFunction(@Nullable CoTTrigger.TestGrantFunction function) {
             this.function = function;
         }
     }
